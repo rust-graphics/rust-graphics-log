@@ -41,7 +41,7 @@ extern "C" {
 }
 
 #[cfg(target_os = "android")]
-fn print(priority: i32, text: &str) {
+pub fn print(priority: i32, text: &str) {
     use std::{ffi::CString, os::raw::c_int};
     let tag = CString::new("rust-graphics-log").unwrap();
     let text = CString::new(text).unwrap();
