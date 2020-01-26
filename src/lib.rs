@@ -1,11 +1,27 @@
+#[macro_export]
+macro_rules! log_format {
+    ($t:expr, $fmt:expr) => {
+        format!("{:?}({:?}) [{}] ({}:{}) {}",
+            std::time::Instant::now(),
+            std::thread::current().id(),
+            $t, file!(), line!(), $fmt)
+    };
+    ($t:expr, $fmt:expr, $($arg:tt)*) => {
+        format!("{:?}({:?}) [{}] ({}:{}) {}",
+            std::time::Instant::now(),
+            std::thread::current().id(),
+            $t, file!(), line!(), format!($fmt, $($arg)*))
+    };
+}
+
 #[cfg(not(target_os = "android"))]
 #[macro_export]
 macro_rules! log_i {
     ($fmt:expr) => {
-        println!("{}", format!("[info] ({}:{}) {}", file!(), line!(), $fmt));
+        println!("{}", $crate::log_format!("info", $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        println!("{}", format!("[info] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        println!("{}", $crate::log_format!("info", $fmt, $($arg)*));
     };
 }
 
@@ -13,10 +29,10 @@ macro_rules! log_i {
 #[macro_export]
 macro_rules! log_e {
     ($fmt:expr) => {
-        eprintln!("{}", format!("[error] ({}:{}) {}", file!(), line!(), $fmt));
+        eprintln!("{}", $crate::log_format!("error", $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        eprintln!("{}", format!("[error] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        eprintln!("{}", $crate::log_format!("error", $fmt, $($arg)*));
     };
 }
 
@@ -24,10 +40,10 @@ macro_rules! log_e {
 #[macro_export]
 macro_rules! log_f {
     ($fmt:expr) => (
-        panic!("{}", format!("[fatal] ({}:{}) {}", file!(), line!(), $fmt));
+        panic!("{}", $crate::log_format!("fatal", $fmt));
     );
     ($fmt:expr, $($arg:tt)*) => {
-        panic!("{}", format!("[fatal] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        panic!("{}", $crate::log_format!("fatal", $fmt, $($arg)*));
     };
 }
 
@@ -54,10 +70,10 @@ pub fn print(priority: i32, text: &str) {
 #[macro_export]
 macro_rules! log_i {
     ($fmt:expr) => {
-        $crate::print(4, &format!("[info] ({}:{}) {}", file!(), line!(), format!($fmt)));
+        $crate::print(4, &$crate::log_format!("info", $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::print(4, &format!("[info] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        $crate::print(4, &$crate::log_format!("info", $fmt, $($arg)*));
     };
 }
 
@@ -65,10 +81,10 @@ macro_rules! log_i {
 #[macro_export]
 macro_rules! log_e {
     ($fmt:expr) => {
-        $crate::print(6, &format!("[error] ({}:{}) {}", file!(), line!(), format!($fmt)));
+        $crate::print(6, &$crate::format!("error", $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::print(6, &format!("[error] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        $crate::print(6, &$crate::format!("error", $fmt, $($arg)*));
     };
 }
 
@@ -76,12 +92,14 @@ macro_rules! log_e {
 #[macro_export]
 macro_rules! log_f {
     ($fmt:expr) => ({
-        $crate::print(7, &format!("[fatal] ({}:{}) {}", file!(), line!(), format!($fmt)));
-        panic!("{}", &format!("[fatal] ({}:{}) {}", file!(), line!(), format!($fmt)));
+        let msg = format!("fatal", $fmt);
+        $crate::print(7, &msg);
+        panic!("{}", &msg);
     });
     ($fmt:expr, $($arg:tt)*) => ({
-        $crate::print(7, &format!("[fatal] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
-        panic!("{}", &format!("[fatal] ({}:{}) {}", file!(), line!(), format!($fmt, $($arg)*)));
+        let msg = format!("fatal", $fmt, $($arg)*);
+        $crate::print(7, &msg);
+        panic!("{}", &msg);
     });
 }
 
@@ -90,7 +108,7 @@ macro_rules! unwrap_f {
     ($e:expr) => {
         match $e {
             Some(v) => v,
-            None => log_f!("Unwrap failed!"),
+            None => $crate::log_f!("Unwrap failed!"),
         }
     };
 }
@@ -100,7 +118,7 @@ macro_rules! result_f {
     ($e:expr) => {
         match $e {
             Ok(v) => v,
-            Err(e) => log_f!("Unwrap failed! {:?}", e),
+            Err(e) => $crate::log_f!("Unwrap failed! {:?}", e),
         }
     };
 }
@@ -108,21 +126,21 @@ macro_rules! result_f {
 #[macro_export]
 macro_rules! unimplemented_f {
     () => {
-        log_f!("Not implemented")
+        $crate::log_f!("Not implemented")
     };
 }
 
 #[macro_export]
 macro_rules! unexpected_f {
     () => {
-        log_f!("Unexpected")
+        $crate::log_f!("Unexpected")
     };
 }
 
 #[macro_export]
 macro_rules! todo_e {
     () => {
-        log_e!("TODO")
+        $crate::log_e!("TODO")
     };
 }
 
@@ -136,6 +154,7 @@ mod tests {
         log_i!("Test {}", 2);
         log_e!("Test 3");
         log_e!("Test {}", 4);
+        todo_e!();
     }
 
     #[test]
@@ -147,6 +166,12 @@ mod tests {
     #[test]
     #[should_panic]
     fn this_test_3() {
-        log_f!("Test 6");
+        unimplemented_f!();
+    }
+
+    #[test]
+    #[should_panic]
+    fn this_test_4() {
+        unexpected_f!();
     }
 }

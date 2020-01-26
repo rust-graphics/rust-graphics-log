@@ -1,6 +1,6 @@
 [package]
 name = "rust_graphics_log"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Hossein Noroozpour <hossein.noroozpour@gmail.com>"]
 repository = "https://github.com/rust-graphics/rust-graphics-log"
 description = "A simple, small and minimal logger."
