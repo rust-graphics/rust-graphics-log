@@ -1,17 +1,21 @@
 #![feature(thread_id_value)]
 
+pub fn get_thread_id() -> u64 {
+    return std::thread::current().id().as_u64();
+}
+
 #[macro_export]
 macro_rules! log_format {
     ($t:expr, $fmt:expr) => {
         format!("<{}:{}> [{}] ({}:{}) {}",
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() - 1580022711607150410,
-            std::thread::current().id().as_u64(),
+            $crate::get_thread_id(),
             $t, file!(), line!(), $fmt)
     };
     ($t:expr, $fmt:expr, $($arg:tt)*) => {
         format!("<{}:{}> [{}] ({}:{}) {}",
             std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() - 1580022711607150410,
-            std::thread::current().id().as_u64(),
+            $crate::get_thread_id(),
             $t, file!(), line!(), format!($fmt, $($arg)*))
     };
 }
