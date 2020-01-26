@@ -1,15 +1,17 @@
+#![feature(thread_id_value)]
+
 #[macro_export]
 macro_rules! log_format {
     ($t:expr, $fmt:expr) => {
-        format!("{:?}({:?}) [{}] ({}:{}) {}",
-            std::time::Instant::now(),
-            std::thread::current().id(),
+        format!("<{}:{}> [{}] ({}:{}) {}",
+            std::time::Instant::now().elapsed().as_nanos(),
+            std::thread::current().id().as_u64(),
             $t, file!(), line!(), $fmt)
     };
     ($t:expr, $fmt:expr, $($arg:tt)*) => {
-        format!("{:?}({:?}) [{}] ({}:{}) {}",
-            std::time::Instant::now(),
-            std::thread::current().id(),
+        format!("<{}:{}> [{}] ({}:{}) {}",
+            std::time::Instant::now().elapsed().as_nanos(),
+            std::thread::current().id().as_u64(),
             $t, file!(), line!(), format!($fmt, $($arg)*))
     };
 }
