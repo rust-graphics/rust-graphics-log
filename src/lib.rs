@@ -87,10 +87,10 @@ macro_rules! log_i {
 #[macro_export]
 macro_rules! log_e {
     ($fmt:expr) => {
-        $crate::print(6, &$crate::format!("error", $fmt));
+        $crate::print(6, &$crate::log_format!("error", $fmt));
     };
     ($fmt:expr, $($arg:tt)*) => {
-        $crate::print(6, &$crate::format!("error", $fmt, $($arg)*));
+        $crate::print(6, &$crate::log_format!("error", $fmt, $($arg)*));
     };
 }
 
@@ -98,12 +98,12 @@ macro_rules! log_e {
 #[macro_export]
 macro_rules! log_f {
     ($fmt:expr) => ({
-        let msg = format!("fatal", $fmt);
+        let msg = $crate::log_format!("fatal", $fmt);
         $crate::print(7, &msg);
         panic!("{}", &msg);
     });
     ($fmt:expr, $($arg:tt)*) => ({
-        let msg = format!("fatal", $fmt, $($arg)*);
+        let msg = $crate::log_format!("fatal", $fmt, $($arg)*);
         $crate::print(7, &msg);
         panic!("{}", &msg);
     });
