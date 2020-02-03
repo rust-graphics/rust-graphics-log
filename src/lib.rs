@@ -1,26 +1,41 @@
 #![feature(thread_id_value)]
 
 pub fn get_thread_id() -> u64 {
-    return std::thread::current().id().as_u64();
+    std::thread::current().id().as_u64()
+}
+
+#[cfg(any(
+    target_os = "windows",
+    target_os = "linux",
+    target_os = "macos",
+    target_os = "android",
+    target_os = "ios"
+))]
+pub fn get_now() -> u128 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_nanos()
+        - 1580022711607150410
 }
 
 #[macro_export]
 macro_rules! log_format {
     ($t:expr, $fmt:expr) => {
         format!("<{}:{}> [{}] ({}:{}) {}",
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() - 1580022711607150410,
+            $crate::get_now(),
             $crate::get_thread_id(),
             $t, file!(), line!(), $fmt)
     };
     ($t:expr, $fmt:expr, $($arg:tt)*) => {
         format!("<{}:{}> [{}] ({}:{}) {}",
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos() - 1580022711607150410,
+            $crate::get_now(),
             $crate::get_thread_id(),
             $t, file!(), line!(), format!($fmt, $($arg)*))
     };
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 #[macro_export]
 macro_rules! log_i {
     ($fmt:expr) => {
@@ -31,7 +46,7 @@ macro_rules! log_i {
     };
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 #[macro_export]
 macro_rules! log_e {
     ($fmt:expr) => {
@@ -42,7 +57,7 @@ macro_rules! log_e {
     };
 }
 
-#[cfg(not(target_os = "android"))]
+#[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 #[macro_export]
 macro_rules! log_f {
     ($fmt:expr) => (
@@ -108,6 +123,12 @@ macro_rules! log_f {
         panic!("{}", &msg);
     });
 }
+
+#[cfg(target_arch = "wasm32")]
+pub mod wasm;
+
+#[cfg(target_arch = "wasm32")]
+pub use wasm::*;
 
 #[macro_export]
 macro_rules! unwrap_f {
